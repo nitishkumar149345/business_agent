@@ -2,7 +2,7 @@ from typing import Any
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_community.tools import DuckDuckGoSearchRun
-from langchain_community.tools.tavily_search import TavilySearchResults
+# from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain.agents import create_openai_tools_agent, AgentExecutor
 from langchain_core.pydantic_v1 import BaseModel, Field
 from dotenv import load_dotenv
@@ -35,18 +35,12 @@ class TechnicalAgent():
             ('system','''
                 Your task is to generate a list of detailed and relevant questions that will help gather comprehensive information about the technical needs of a specified business model.
                 The questions should cover the following aspects to ensure a complete technical report:
-<<<<<<< HEAD
+
                 - Technical Solutions and Recommendations :- Necessary skills, technologies, and code snippets needed to implement the business. Practical solutions for the development team.
                 - Techincal roadmap
                 - Required Skills :- List of technical skills needed for the project.
                 - Code Examples :- Relevant code snippets and examples.Generate the codes in python .
                 - Technology Recommendations :- Suggested technologies and tools for implementation.
-=======
-                - **Technical Solutions and Recommendations:** Necessary skills, technologies, and code snippets needed to implement the business. Practical solutions for the development team.
-                - **Required Skills:** List of technical skills needed for the project.
-                - **Code Examples:** Relevant code snippets and examples.
-                - **Technology Recommendations:** Suggested technologies and tools for implementation.
->>>>>>> f559085359c4a30207837e27e32daaa2c7f61ab6
 
                 You will receive the business model, and based on that, you need to generate the questions as mentioned above.
                 \nformat_instructions: {format_instructions}
@@ -60,7 +54,7 @@ class TechnicalAgent():
 
     def agent(self):
         prompt = ChatPromptTemplate.from_messages([
-<<<<<<< HEAD
+
             ('system','''
                 Role :- Technical Developer
                 Goal :- Generate informative and comprehensive answers for the user questions based on your research
@@ -69,20 +63,12 @@ class TechnicalAgent():
                         Avoid answering with straight and point answers.
                 Tools:- You have access to this tool 'DuckDuckGoSearchRun' to do online searching.
                     '''),
-=======
-            ('system',''' Answer the questions using your knowlodge and provided tools: The tool you have is TavilySearchResults for online searching.
-                    first try to answer with your knowledge, if you dit't get, then try the provided tool.
-                    Please ensure that the response is long, descriptive, comprehensive and informative, rather than just listing points or being overly concise.
-                    Ensure that the answers you provide are thorough, well-informed, and cover all relevant aspects.
-                    Generate full python code for coding examples related questions.
-                    The responses should be detailed, insightful, and easy to understand, offering a complete and clear explanation on the topic.'''),
->>>>>>> f559085359c4a30207837e27e32daaa2c7f61ab6
-                    
+
             ('user','{question}'),
             MessagesPlaceholder(variable_name='agent_scratchpad')
         ])
 
-        tools = [TavilySearchResults()]
+        tools = [DuckDuckGoSearchRun()]
         agent = create_openai_tools_agent(llm, tools, prompt)
         agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
   
@@ -99,7 +85,7 @@ class TechnicalAgent():
         print ('---------------formatting report-----------------')
         prompt = ChatPromptTemplate.from_messages([
             ('system','''
-<<<<<<< HEAD
+
                 Role :- Content Writer
                 Goal :- Format the given input into a nice Technical Report
                 Task :- You need to format the given input into a marketing report.
@@ -107,12 +93,7 @@ class TechnicalAgent():
             
                 warning :- Do not add or remove anything from input. Just format it.    
                 '''),
-=======
-                    - Your task is to transform the provided input into a detailed and well-structured Technical Report.
-                    - Your role is only to format the output properly. Do not add, remove, or compress any information from the input.
-                    - The report should be organized with clear titles and sections, covering all relevant aspects of the input.
-                    - Ensure that the report is comprehensive, informative, and professionally presented.'''),
->>>>>>> f559085359c4a30207837e27e32daaa2c7f61ab6
+
             ('user','{input}')
         ])
 
