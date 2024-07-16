@@ -29,28 +29,36 @@ class MarketingAgent():
         self.observations = 'Marketing Report: '
 
     def find_business_model(self):
-        parser = JsonOutputParser(pydantic_object=BusinessModel)
+        
         prompt = ChatPromptTemplate.from_messages([
-            ('system','''You are an expert in business strategies and models.
-                Your task is to suggest the best business model for a given domain and provide a detailed description of this model.
-                \nformat_instructions:{format_instructions}'''),
-            ('user','{domain}')
+            ('system','''
+                Role :- Marketing Expert
+                Goal :- Find the best business model based on the provided domain
+                Task :- Analyze and identify the best business model for the provided domain.
+                        This task involves researching current market trends, competitor analysis,
+                        and potential opportunities within the domain.
+                output :- Return only the identifyed business model. Should not retrun any other thing. just name of the business model you suggest.
+            '''),
+            ('user','{domain}'),
+            MessagesPlaceholder(variable_name='agent_scratchpad')
         ])
 
-    
-        chain = prompt | llm | parser
-        response = chain.invoke({'domain':self.domain, 'format_instructions':parser.get_format_instructions()})
-        self.business_model = response['business_model']
-        self.description = response['description']
+        tools = [DuckDuckGoSearchRun()]
         
-
+        agent = create_openai_tools_agent(llm, tools, prompt)
+        agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+        response = agent_executor.invoke({'domain':self.domain})
+        self.business_model = response['output']
+        
+        
+        
     def generate_questions(self):
 
         parser = JsonOutputParser(pydantic_object=Queries)
 
         prompt = ChatPromptTemplate.from_messages([
             ('system','''
-            
+                
                 Generate a list of detailed and relevant questions that can help gather comprehensive information about a business model.
                 The questions should cover various aspects such as the Current Market Trends, Competitor Analysis,Revenue Streams,Target Customer Segments,
                 Value Propositions, Potential Risks and Opportunities and other business model related.
@@ -66,22 +74,25 @@ class MarketingAgent():
 
     def agent(self):
         prompt = ChatPromptTemplate.from_messages([
-            ('system',''' Answer the questions using your knowlodge and provided tools: The tool you have is TavilySearchResults for online searching.
-                    first try to answer with your knowledge, if you dit't get, then try the provided tool.
-                    Please ensure that the response is long, descriptive, comprehensive and informative, rather than just listing points or being overly concise.
-                    Ensure that the answers you provide are thorough, well-informed, and cover all relevant aspects.
-                    The responses should be detailed, insightful, and easy to understand, offering a complete and clear explanation on the topic'''),
+            ('system',''' 
+                Role :- Marketing Researcher
+                Goal :- Generate informative and comprehensive answers for the user questions based on your research
+                Task :- Do the research to acquire the related information to answer the user question.
+                        The answer should be descriptive, comprehensive and informative. The answers should be detailed.
+                        Avoid answering with straight and point answers. 
+                Tools:- You have access to this tool 'DuckDuckGoSearchRun' to do online searching.
+                '''),
                     
             ('user','{question}'),
             MessagesPlaceholder(variable_name='agent_scratchpad')
         ])
 
-        tools = [TavilySearchResults()]
+        tools = [DuckDuckGoSearchRun()]
         agent = create_openai_tools_agent(llm, tools, prompt)
         agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 
         self.observations = 'business mdoel---'+self.business_model
-        self.observations= self.observations +'\n'+ f'description: {self.description}'
+        
 
         for question in self.questions:
             response = agent_executor.invoke({'question':question})
@@ -96,10 +107,12 @@ class MarketingAgent():
         print ('---------------formatting report-----------------')
         prompt = ChatPromptTemplate.from_messages([
             ('system','''
-                    - Your task is to transform the provided input into a detailed and well-structured Marketing Report.
-                    - Your role is only to format the output properly. Do not add, remove, or compress any information from the input.
-                    - The report should be organized with clear titles and sections, covering all relevant aspects of the input.
-                    - Ensure that the report is comprehensive, informative, and professionally presented.
+                    Role :- Content Writer
+                    Goal :- Format the given input into a nice marketing report
+                    Task :- You need to format the given input into a marketing report.
+                            The report has to be well formted, titled and organized
+             
+                    warning :- Do not add or remove anything from input. Just format it.
                 '''),
             ('user','{input}')
         ])
@@ -111,6 +124,6 @@ class MarketingAgent():
 
         
 
-# agent = MarketingAgent('large language models with langchain and langgraph')
+# agent = MarketingAgent('Gen AI Professional and Consulting Services Using LLMs')
 # re = agent()
 # print (re)
